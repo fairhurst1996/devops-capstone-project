@@ -138,6 +138,7 @@ class TestAccountService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_update_an_account(self):
+        """ It should update a single account"""
         #create an account to update
         account=AccountFactory()
         resp=self.client.post(BASE_URL,json=account.serialize())
@@ -148,4 +149,28 @@ class TestAccountService(TestCase):
         new_account['name']="John Doe"
         resp=self.client.put(f"{BASE_URL}/{new_account['id']}", json=new_account)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        
+        updated_account=resp.get_json()
+        self.assertEqual(updated_account['name'], "John Doe")
+
+    def test_delete_an_account(self):
+        """It should delete a single account"""
+        account=AccountFactory()
+        resp=self.client.post(BASE_URL,json=account.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        deleted_account=resp.get_json()
+        resp=self.client.delete(f"{BASE_URL}/{deleted_account['id']}", json=deleted_account)
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_get_account_list(self):
+        """It should get a list of accounts"""
+        self._create_accounts(5)
+        resp=self.client.get(BASE_URL)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 5)
+
+    def test_method_not_allowed(self):
+        """It should not allow an illegal method call"""
+        resp=resp=self.client.delete(BASE_URL)
+        self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
